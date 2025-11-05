@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI診断サイト</title>
+  <!-- 外部CSSファイルを読み込み -->
+  <link rel="stylesheet" href="style.css">
+  <!-- フォントの読み込み -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    
+    <!-- 音量ボタンを右上に配置 -->
+    <button id="volume-toggle" class="hidden">
+        <img id="volume-icon" src="img/volume_on.png" alt="音量ON/OFF" />
+    </button>
+    
+    <!-- 顔グラフィック表示部分 (スライダー全体を含む) -->
+    <div id="face-container">
+       <!-- スライドを表示するビューポート -->
+       <div id="slider-viewport">
+        <!-- 実際にスライドする画像リスト -->
+        <div id="image-slider">
+            <!-- 画像はJSで挿入される -->
+        </div>
+      </div>
+    
+      <!-- ナビゲーションボタン -->
+      <button id="prev-btn" class="nav-btn"></button>
+      <button id="next-btn" class="nav-btn"></button>
+
+      <!-- ページネーション（ドット） -->
+      <div id="dot-navigation">
+          <!-- ドットはJSで追加される -->
+      </div>
+    </div>
+    
+    <!-- プログレスバーコンテナ -->
+    <div id="progress-container">
+      <div id="progress-text"></div>
+      <div id="progress-bar-bg">
+        <div id="progress-bar-fill"></div>
+      </div>
+    </div>
+    
+    <!-- ローディング画面コンテナ (初期状態は非表示) -->
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="loading-text">AIが思考中...</div>
+    </div>
+
+    <!-- テキストと選択肢を表示するコンテナ -->
+    <div id="text-box">
+        <!-- 吹き出しの本体となるラッパー要素 -->
+        <div id="dialogue-bubble">
+            <div id="text">このサイトは音が出ます</div> 
+        </div>
+        
+        <div id="choices"></div>
+        <button id="start-btn" class="choice-btn">
+はじめる
+        </button>
+    </div>
+  </div>
+
+  <!-- スクリプトをbodyの最後に配置 -->
+  <script src="./data.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

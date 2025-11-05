@@ -1,0 +1,235 @@
+/* -------------------------------------------
+ * style_error.css: AI再解析モード（嘘診断）専用スタイル
+ * レスポンシブ対応済み
+ * ------------------------------------------- */
+
+/* ベーススタイル */
+body {
+    background-color: black; 
+    color: white;            
+    font-family: 'Roboto Mono', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    /* モバイルでコンテンツが画面上部に寄りすぎないように、paddingを調整 */
+    padding-top: 20px; 
+    padding-bottom: 20px;
+}
+
+#game-container {
+  width: 100%; /* モバイルでは幅いっぱい */
+  max-width: 600px; /* PCでの最大幅 */
+  border: 2px solid white; /* 黒背景なので、境界線を白に変更 */
+  background-color: black; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+    transition: opacity 3s; 
+    padding: 20px;
+    box-sizing: border-box;
+    /* ゲームコンテナ自体もJSで動かすためtransitionを設定 */
+    transition: opacity 3s, transform 0.05s; 
+  overflow: hidden; 
+  position: relative; 
+}
+
+/* AI顔コンテナ */
+#face-container {
+  width: 100%;
+  border-bottom: 2px solid white; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: black; 
+  padding: 10px 0;
+  position: relative; /* ★修正: 子要素の絶対配置の基準にする */
+}
+
+#face {
+  width: 100%;
+  max-width: 560px;
+  height: auto; 
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* テキスト表示エリア */
+#text-box {
+    width: 100%;
+    margin-top: 20px;
+    min-height: 120px; /* テキストの量が少なくてもレイアウトが崩れにくいように */
+}
+#text {
+    white-space: pre-wrap;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    font-family: 'Roboto Mono', monospace;
+    color: white; 
+}
+@media (max-width: 600px) {
+    #text {
+        font-size: 1rem;
+    }
+}
+
+/* テキスト内の強調部分 */
+#text strong {
+    color: #ff4d4d; 
+    font-weight: bold;
+}
+
+/* 選択肢エリア */
+#choices {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+/* 選択肢ボタン */
+.choice-btn {
+  background: none;
+  border: 1px solid white; 
+  color: white;            
+  padding: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  
+  width: 90%; /* モバイルフレンドリーな幅 */
+  max-width: 400px; /* PCでの最大幅 */
+  text-align: center; 
+  transition: background-color 0.2s, color 0.2s;
+  box-sizing: border-box;
+}
+
+/* 選択肢ボタン ホバー */
+.choice-btn:hover {
+  background-color: white; 
+  color: black;            
+}
+
+/* 嘘診断のボタン（このモードでは全てこのスタイル） */
+.choice-btn.danger-btn {
+    border: 1px solid white; 
+    background-color: black; 
+    color: white;            
+}
+.choice-btn.danger-btn:hover {
+    background-color: white;
+    color: black;
+}
+
+/* 結果画面のフッター（不穏なテキスト） */
+#result-footer .result-text-footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #ffcccc; 
+    opacity: 0.8;
+    line-height: 1.5;
+    font-family: 'Press Start 2P', cursive;
+}
+
+/* グリッチ演出用オーバーレイ */
+#glitch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 0, 0, 0.1); 
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2s;
+  z-index: 999;
+  
+  transform: translate(0, 0);
+  filter: hue-rotate(0deg);
+}
+
+/* 最終画面コンテナ（暗転後の画面） */
+#center-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: black; 
+    z-index: 1000;
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 2s; 
+}
+
+/* 最終画面のメッセージスタイル */
+#end-message {
+    color: #ff4d4d; 
+    font-size: 0.8rem;
+    text-align: center;
+    margin-bottom: 20px;
+    font-family: 'Press Start 2P', cursive;
+    line-height: 1.8;
+}
+
+/* 最終画面のボタンエリア */
+#end-choices {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 最終画面のボタン */
+#end-choices .choice-btn {
+    margin-top: 20px;
+    border: 1px solid white; 
+    background-color: black; 
+    color: white;            
+    font-size: 0.8rem;
+    font-family: 'Roboto Mono', monospace;
+}
+#end-choices .choice-btn:hover {
+    background-color: white; 
+    color: black;            
+}
+
+/* 音量ボタンのスタイル */
+#volume-btn { 
+    position: absolute; /* ★修正: absoluteに変更し、親要素(face-container)基準に */
+    top: 10px;       /* 上端から */
+    right: 10px;     /* 右端から */
+    z-index: 1001;    /* 最前面に表示 */
+    
+    background-color: white; 
+    border: 2px solid black;
+    width: 44px; /* タッチしやすいサイズ */
+    height: 44px; /* タッチしやすいサイズ */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    
+    box-shadow: 2px 2px 0 black;
+    transition: all 0.1s;
+}
+
+#volume-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1); 
+    transform: translate(2px, 2px); 
+    box-shadow: none;
+}
+
+#volume-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}

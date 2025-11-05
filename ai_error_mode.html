@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI再解析モード β版</title>
+  
+ 
+  
+  <!-- 嘘診断専用のスタイルを読み込む (このファイルが最も優先されるべき) -->
+  <link rel="stylesheet" href="style_error.css">
+  
+  <!-- 演出用フォント -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  
+</head>
+<body>
+  
+  
+  <!-- メインの診断UI -->
+  <div id="game-container">
+    <div id="face-container">
+      <!-- 【移動】音量ボタンをface-container内に配置 -->
+      <button id="volume-btn" aria-label="音量を切り替える">
+          <!-- ★修正: 初期画像のsrcを削除し、JavaScriptで設定を強制する -->
+          <img id="volume-icon" alt="音量オンアイコン"> 
+      </button>
+      
+      <!-- 'face_close.png' は正常診断サイトと共通の画像を使用すると想定 -->
+      <img id="face" src="img/face_main_open_white.png" alt="AIの顔">
+    </div>
+
+    <div id="text-box">
+        <div id="text"></div> 
+        <div id="choices"></div>
+    </div>
+    
+    <!-- 結果画面のフッター（#404エラーなど） -->
+    <div id="result-footer"></div>
+  </div>
+
+  <!-- 演出用オーバーレイ -->
+  <div id="glitch-overlay"></div>
+  
+  <!-- ★追加★: 暗転後のUI要素 -->
+  <div id="center-container">
+    <div id="end-message"></div>
+    <div id="end-choices"></div>
+  </div>
+  
+  <!-- 嘘診断用のJSを読み込む -->
+  <script type="module" src="script_error.js"></script>
+</body>
+</html>
