@@ -664,12 +664,7 @@ function renderResult(recommendedWork) {
         });
         if (DOM.choicesEl) DOM.choicesEl.appendChild(restartBtn);
 
-        // 2. AI再解析モードボタン (新サイトへ移動)
-        const fakeBtn = createChoiceButton("AI再解析モード β版", () => {
-            stopAllVoices();
-            window.location.href = "ai_error_mode.html"; 
-        });
-        if (DOM.choicesEl) DOM.choicesEl.appendChild(fakeBtn);
+        
     });
 }
 
