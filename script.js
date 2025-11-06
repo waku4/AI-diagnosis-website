@@ -9,6 +9,7 @@ const CONSTANTS = {
     MOUTH_SPEED: 150, // 口パクの切り替え速度 (ms)
     TEXT_SPEED: 50,   // テキスト表示速度 (ms)
     LOADING_DURATION: 1500, // ローディング時間 (ms)
+    PENALTY_RATE: 0.5, // 不一致ペナルティの割合 (最重要タグスコアの50%を減点)
 
     // シーン名
     SCENE: {
@@ -45,14 +46,14 @@ let STATE = {
     textIntervalId: null,
     currentScene: CONSTANTS.SCENE.START,
     questionIndex: 0,
-    answers: [], // 蓄積されたタグ
+    answers: [], // 蓄積されたタグ (重み付き文字列のまま格納: 例 "vivid*3")
     
     // スライダー関連
     currentSlideIndex: 0,
     slideImages: [], // スライド画像のDOM要素配列
     currentMouthImage: null, // 口パクのターゲットDOM要素
 
-    // 音量制御関連 (追加)
+    // 音量制御関連
     isMuted: false, // ミュート状態を管理
 };
 
@@ -74,9 +75,12 @@ const DOM = {
     progressBarFill: null,
     progressText: null,
 
-    // 音量ボタン関連 (追加)
+    // 音量ボタン関連
     volumeToggleBtn: null,
     volumeIcon: null,
+    
+    // ★修正点1: gameContainerを追加
+    gameContainer: null,
 };
 
 
@@ -340,7 +344,8 @@ function updateProgressBar() {
         // 質問は0から始まるため、表示は+1
         const currentQuestionNumber = STATE.questionIndex; 
         
-        const progress = (currentQuestionNumber / totalQuestions) * 100;
+        // 質問数を1から始めるため、進捗計算を修正
+        const progress = ((currentQuestionNumber) / totalQuestions) * 100;
         
         DOM.progressText.textContent = `質問 ${currentQuestionNumber + 1} / ${totalQuestions} 問目`;
         
@@ -353,12 +358,113 @@ function updateProgressBar() {
 
 
 //======================================
+// 🛠️ 補助関数 (タグ解析)
+//======================================
+
+/**
+ * "tag*weight" 形式の文字列を解析し、[タグ名, 重み]のオブジェクトを返す
+ * @param {string} tagString - 例: "vivid*3" または "calm"
+ * @returns {{name: string, weight: number}}
+ */
+function parseTag(tagString) {
+    const parts = tagString.split('*');
+    const name = parts[0].trim();
+    // 重みが指定されていなければ 1 とする
+    const weight = parts.length > 1 ? parseInt(parts[1], 10) : 1;
+    return { name, weight };
+}
+
+
+//======================================
+// 📊 高度な診断ロジックの核となる関数
+//======================================
+
+/**
+ * 1. ユーザーの全回答からタグごとの合計スコアを算出する (重み付け反映)
+ * 2. 最もスコアが高いタグ（ペナルティ判定用）を抽出する (上位2つ)
+ * @returns {{tagScores: Object<string, number>, maxTags: {name: string, score: number}[]}}
+ */
+function accumulateTags() {
+    const tagScores = {};
+    
+    // スコア集計 (STATE.answersは重み付き文字列の配列)
+    STATE.answers.forEach(tagStr => {
+        const { name, weight } = parseTag(tagStr);
+        tagScores[name] = (tagScores[name] || 0) + weight;
+    });
+
+    // 最大スコアのタグを特定 (ペナルティ判定に使用)
+    const sortedTags = Object.entries(tagScores)
+        .map(([name, score]) => ({ name, score }))
+        .sort((a, b) => b.score - a.score);
+        
+    // スコア上位2つのタグを抽出
+    const maxTags = sortedTags.slice(0, 2); 
+
+    return { tagScores, maxTags };
+}
+
+/**
+ * ユーザーのタグスコアに基づき、最適な作品を決定する
+ * (一致度スコアと不一致ペナルティを適用)
+ * @param {Object<string, number>} userTagScores - ユーザーのタグスコア集計
+ * @param {{name: string, score: number}[]} maxTags - ユーザーの最重要タグリスト
+ * @returns {Object|null} - 最もスコアの高い作品オブジェクト
+ */
+function calculateBestMatch(userTagScores, maxTags) {
+    let bestMatch = null;
+    // スコアは負の値になる可能性があるため、-Infinityで初期化
+    let highestScore = -Infinity;
+    
+    const penaltyRate = CONSTANTS.PENALTY_RATE; 
+
+    works.forEach(work => {
+        let matchScore = 0;
+        
+        // 1. 一致度スコアの計算 (Positive Match)
+        work.tags.forEach(workTag => {
+            if (userTagScores[workTag]) {
+                // 作品タグがユーザーのスコアにある場合、そのスコアを加算
+                matchScore += userTagScores[workTag];
+            }
+        });
+
+        // 2. 不一致ペナルティの計算 (Negative Penalty)
+        maxTags.forEach(maxTag => {
+            const isMatched = work.tags.includes(maxTag.name);
+            
+            if (!isMatched) {
+                // 最重要タグが作品に含まれていない場合、ペナルティを適用
+                // ペナルティ値は、その最重要タグのユーザーのスコアにレートを掛けたもの
+                const penaltyValue = Math.ceil(maxTag.score * penaltyRate);
+                matchScore -= penaltyValue;
+                console.log(`[Penalty] 作品: ${work.title}, タグ: ${maxTag.name}が不足。${penaltyValue}点減点。`);
+            }
+        });
+        
+        console.log(`作品: ${work.title}, 最終スコア: ${matchScore}`);
+
+        // スコア更新
+        if (matchScore > highestScore) {
+            highestScore = matchScore;
+            bestMatch = work;
+        } else if (matchScore === highestScore && bestMatch === null) {
+            // 同点の場合、最初に現れた作品を採用
+            bestMatch = work;
+        }
+    });
+
+    return bestMatch;
+}
+
+
+//======================================
 // ⚙️ ロジック関数
 //======================================
 
 /** 回答を処理し、次の質問へ進む */
 function handleAnswer(choice) {
-    // 選択されたタグを解答リストに追加
+    // 選択されたタグを解答リストに追加 (重み付き文字列のまま)
     STATE.answers.push(...choice.tags);
 
     stopAllVoices();
@@ -366,38 +472,7 @@ function handleAnswer(choice) {
     showQuestion(); 
 }
 
-/** 回答タグに基づいてスコアリング用のタグカウントオブジェクトを生成する */
-function countTags() {
-    return STATE.answers.reduce((acc, tag) => {
-        acc[tag] = (acc[tag] || 0) + 1;
-        return acc;
-    }, {});
-}
-
-/** 最適な作品をマッチングして返す (タグスコア最大) */
-function getBestMatchWork() {
-    if (STATE.answers.length === 0) return works[0];
-    const tagCounts = countTags();
-
-    let bestMatch = null;
-    let maxScore = -1;
-
-    works.forEach(work => {
-        let score = 0;
-        work.tags.forEach(tag => {
-            score += tagCounts[tag] || 0;
-        });
-
-        if (score > maxScore) {
-            maxScore = score;
-            bestMatch = work;
-        } else if (score === maxScore && bestMatch === null) {
-            bestMatch = work;
-        }
-    });
-
-    return bestMatch || works[0];
-}
+// **既存の getBestMatchWork は削除し、calculateBestMatch を直接使う**
 
 
 //======================================
@@ -411,6 +486,16 @@ function showStartScreen() {
 
     initializeQASlider(); 
     updateProgressBar(); 
+
+    // 初期状態として音量アイコンをONに設定
+    if (DOM.volumeIcon) {
+        DOM.volumeIcon.src = STATE.isMuted ? CONSTANTS.IMAGE.VOLUME_OFF : CONSTANTS.IMAGE.VOLUME_ON;
+    }
+    
+    // 画面切り替え時にクラスを削除
+    if (DOM.gameContainer) {
+        DOM.gameContainer.classList.remove('normal-result');
+    }
 
     if (DOM.textEl) DOM.textEl.innerHTML = `このサイトは音が出ます`; // 初期メッセージを固定表示
     if (DOM.choicesEl) DOM.choicesEl.innerHTML = "";
@@ -428,9 +513,14 @@ function showIntroScene() {
     playBGM(CONSTANTS.AUDIO.MAIN_BGM); 
     updateProgressBar(); 
     initializeQASlider(); 
+    
+    // ★修正点2: イントロに戻る際にクラスを削除
+    if (DOM.gameContainer) {
+        DOM.gameContainer.classList.remove('normal-result');
+    }
 
     const explanationText =
-        "このサイトでは、3つの質問に答えることで、\nあなたにぴったりの作品を提案します。\n気軽に楽しんでくださいね。";
+        "このサイトでは、5つの質問に答えることで、\nあなたにぴったりの作品を提案します。\n気軽に楽しんでくださいね。";
 
     // テキストアニメーションを開始し、完了後にボタンを表示
     animateText(explanationText, () => {
@@ -494,8 +584,33 @@ function showLoading() {
     }
     // ローディング中は音量ボタンを非表示（UIをシンプルに保つため）
     if (DOM.volumeToggleBtn) DOM.volumeToggleBtn.classList.add("hidden"); 
+    
+    // ★修正点3: ローディング前（質問後）はクラスを削除しておく
+    if (DOM.gameContainer) {
+        DOM.gameContainer.classList.remove('normal-result');
+    }
+
 
     setTimeout(showResult, CONSTANTS.LOADING_DURATION);
+}
+
+
+/** 結果シーンを表示する (正常診断) */
+function showResult() {
+    stopAllVoices();
+    playBGM(CONSTANTS.AUDIO.RESULT_BGM); 
+
+    // ★新しい高度な診断ロジックの適用★
+    const { tagScores, maxTags } = accumulateTags();
+    const recommendedWork = calculateBestMatch(tagScores, maxTags);
+    
+    console.log("--- 診断最終集計 ---");
+    console.log("ユーザーの合計タグスコア:", tagScores);
+    console.log("最重要タグ:", maxTags.map(t => `${t.name} (${t.score}点)`).join(", "));
+    console.log("---------------------");
+    console.log("★最終結果★:", recommendedWork ? recommendedWork.title : "見つかりませんでした");
+
+    renderResult(recommendedWork);
 }
 
 
@@ -509,20 +624,30 @@ function renderResult(recommendedWork) {
     updateProgressBar();
     if (DOM.volumeToggleBtn) DOM.volumeToggleBtn.classList.remove("hidden"); 
 
-    const resultTitle = "【正常診断結果】";
+    const resultTitle = "【診断結果】";
         
     let resultText;
     if (recommendedWork) {
+        // ★修正点4: 正常診断の場合にクラスを追加
+        if (DOM.gameContainer) {
+            DOM.gameContainer.classList.add('normal-result');
+        }
+
         renderWorkSlider(recommendedWork);
         
         resultText =
             `${resultTitle}\n` +
             `あなたにおすすめの作品は……\n` +
             `**『${recommendedWork.title}』**\n` +
-            `（${recommendedWork.artist}作）\n\n` +
+            `${recommendedWork.artist ? `（${recommendedWork.artist}作）` : ''}\n\n` +
             `【作品紹介】\n` +
             `${recommendedWork.description}`;
     } else {
+        // ★修正点5: 結果が見つからない（異常診断）の場合はクラスを削除
+        if (DOM.gameContainer) {
+            DOM.gameContainer.classList.remove('normal-result');
+        }
+        
         resultText = `${resultTitle}\n残念ながらおすすめの作品が見つかりませんでした。`;
         initializeQASlider(); 
     }
@@ -535,29 +660,17 @@ function renderResult(recommendedWork) {
         // 1. 再診断ボタン
         const restartBtn = createChoiceButton("もう一度診断する", () => {
             stopAllVoices();
-            showIntroScene();
+            showIntroScene(); // ここでクラスが削除される
         });
         if (DOM.choicesEl) DOM.choicesEl.appendChild(restartBtn);
 
         // 2. AI再解析モードボタン (新サイトへ移動)
         const fakeBtn = createChoiceButton("AI再解析モード β版", () => {
             stopAllVoices();
-            // 新しいエラーモードのサイトへ遷移
-            // !! ここが修正点です !!
             window.location.href = "ai_error_mode.html"; 
         });
         if (DOM.choicesEl) DOM.choicesEl.appendChild(fakeBtn);
     });
-}
-
-
-/** 結果シーンを表示する (正常診断) */
-function showResult() {
-    stopAllVoices();
-    playBGM(CONSTANTS.AUDIO.RESULT_BGM); 
-    
-    const recommendedWork = getBestMatchWork();
-    renderResult(recommendedWork);
 }
 
 
@@ -591,12 +704,18 @@ function cacheDOMElements() {
     DOM.progressBarFill = document.getElementById("progress-bar-fill");
     DOM.progressText = document.getElementById("progress-text");
 
-    // 音量ボタン関連 (追加)
+    // 音量ボタン関連
     DOM.volumeToggleBtn = document.getElementById("volume-toggle");
     DOM.volumeIcon = document.getElementById("volume-icon");
+    
+    // ★修正点1: gameContainerを取得
+    DOM.gameContainer = document.getElementById("game-container");
 
     // 全ての要素が取得できたかチェック
-    const requiredElements = [DOM.textEl, DOM.startBtn, DOM.choicesEl, DOM.slider, DOM.loadingOverlay, DOM.progressContainer, DOM.volumeToggleBtn, DOM.volumeIcon];
+    const requiredElements = [
+        DOM.textEl, DOM.startBtn, DOM.choicesEl, DOM.slider, DOM.loadingOverlay, 
+        DOM.progressContainer, DOM.volumeToggleBtn, DOM.volumeIcon, DOM.gameContainer
+    ];
     if (requiredElements.some(el => el === null)) {
         console.error("[DOM] 必須DOM要素の取得に失敗しました。index.htmlのIDが正しいか確認してください。");
         return false;

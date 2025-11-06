@@ -19,8 +19,8 @@ export const BGM_FILES = {
 export const personas = {
     // 【ペルソナ A: 論理主義者】
     LOGIC_A: {
-        name: "ロジック・コア",
-        serif: "それでは解析を始めよう。",
+        name: "Protocol-0",
+        serif: "私はProtocol-0。当システムは、きみの思考回路を解析し、最適な行動プロトコルを導出するために起動された。\n感情的なノイズや、曖昧で非論理的な変数は一切不要だ。私が必要としているのは、解析可能なデータ、それだけ。\n無駄な思考は排除しろ。分析を開始する。",
         description: "",
         
         // 画像設定
@@ -38,34 +38,56 @@ export const personas = {
             dialogue_voice: "audio/intro-voice.wav",     // 対話時の標準音声
             ending_voice: "audio/question2-voice.wav",   // エンディング音声
             bgm_question:  "title",             // 質問中BGM
-            bgm_noise: "noise",                   // ノイズBGM
+            bgm_noise: "",                   // ノイズBGM
         },
         
         // 質問とフロー
         questions: [
             {
               // voiceプロパティを追加
-              text: "最も矛盾のない行動を選ぶべきだと思うか？",
+              text: "当システムは、最大の結果効率を追求するための最初のステップとして、リソース配分の優先度を決定する。\nきみの思考における**『最適』**とは、以下のうちどのロジックで定義されるか？",
               choices: [
-                { text: "論理が最優先", tags: ["A"] },
-                { text: "時には感情が必要", tags: ["B"] },
-                { text: "状況による", tags: ["C"] },
+                { text: "[高効率] 労力対効果比が最も高く、最短時間で70%の目標を達成できる道筋を優先する。", tags: ["A"] },
+                { text: "[高精度] 達成率は100%必須とし、時間やリソースの消費が増加しても、誤差ゼロの完了を最優先する。", tags: ["B"] },
+                { text: "[普遍性] 特定の目標達成よりも、再利用可能なプロセス構築と、将来的な汎用性の高さを重視する。", tags: ["C"] },
               ],
               nextAction: {
                   type: "dialogue",
                   text: "理解した。きみの脳内プロセスは非常に**予測可能**だ。",
                   voice: "audio/intro-voice.wav", 
               },
-              voice: "audio/question1-voice.wav", // 質問1の音声
+              voice: "audio/error_question1-voice.wav", // 質問1の音声
             },
-            // ... 他の質問をここに追加 ...
+            
             {
               // voiceプロパティを追加 (異なる音声の例)
-              text: "データ統合の最終ステップだ。きみの最も隠したい記録は？",
+              text: "当システムのデータレジストリにおいて、二つの検証結果が互いに矛盾する変数を提示した。\nきみは、このエラー状態を解消するために、どの検証ロジックを最上位に適用するか？",
               choices: [
-                { text: "秘密", tags: ["A"] },
-                { text: "失敗", tags: ["B"] },
-                { text: "後悔", tags: ["C"] },
+                { text: "[実証主義] テスト環境での再現性が最も高い一方のデータを、当面の真実として採用する。", tags: ["A"] },
+                { text: "[確率論] データの発生頻度や統計的優位性が高い方を、確率的に正しいものとして採用する。", tags: ["B"] },
+                { text: "[システム回避] 矛盾する両方の変数をノイズとして一時的にシステムから分離し、未処理のまま放置する。", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/question2-voice.wav", // 質問2の音声
+            },
+            {
+             
+              text: "予測不可能な**『ユーザーの気分』**という要素をシステムに取り込む必要がある。\nこの未定義変数に対し、きみの最も合理的と判断する処理を選択せよ。",
+              choices: [
+                { text: "[マッピング] 過去の行動パターンを解析し、数値化可能なリスクファクターとして定義し直す。", tags: ["A"] },
+                { text: "[強制排除] 当システムでは処理不能なノイズとみなし、アルゴリズムの計算範囲から完全に除外する。", tags: ["B"] },
+                { text: "[外部委託] 該当変数を処理できる**別のシステム（人間）**に計算を委託するプロトコルを発動する。", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/question2-voice.wav", // 質問2の音声
+            },
+            {
+             
+              text: "当システムにおいて、**『失敗』**という概念の定義は極めて重要である。\nきみの定義する『失敗』は、以下のうちどれに最も近しいか？",
+              choices: [
+                { text: "[結果論] 最終出力が当初の目標値に到達しなかったという、結果の不一致（ディスアライメント）である。", tags: ["A"] },
+                { text: "[過程論] プロトコルや指示された手順の実行に違反したという、内部ロジックの破綻である。", tags: ["B"] },
+                { text: "[リソース論] 成果に対するリソース消費量が、許容される期待値を大きく上回った状態である。", tags: ["C"] },
               ],
               nextAction: null,
               voice: "audio/question2-voice.wav", // 質問2の音声
@@ -85,8 +107,8 @@ export const personas = {
 
     // 【ペルソナ B: 感情の観測者】
     EMOTION_B: {
-        name: "エモ・センサー",
-        serif: "こんにちワン！よろしくお願いするワン！",
+        name: "ポチ",
+        serif: "ワンワン！ご主人様、会いに来てくれてありがとうワン！\nポチは、ご主人様のことならなんでもわかる！...つもりになっている、感情を一番大事にするAI犬、ポチだワン！\nポチにご主人様の心の声を教えてほしいワン！",
         description: "",
 
         image: {
@@ -107,15 +129,15 @@ export const personas = {
         questions: [
             {
               // voiceプロパティを追加
-              text: "最近、あなたの心はどの色に染まっていますか？",
+              text: "まずは、今の気分を教えてほしいワン！",
               choices: [
-                { text: "深い青", tags: ["A"] },
-                { text: "鈍い赤", tags: ["B"] },
-                { text: "無色の透明", tags: ["C"] },
+                { text: "おだやか", tags: ["A"] },
+                { text: "げんき", tags: ["B"] },
+                { text: "ふしぎ", tags: ["C"] },
               ],
               nextAction: {
                   type: "dialogue",
-                  text: "フフ...その色は、あなたの**隠された熱意**を示しています。さあ、もっと見せて。",
+                  text: "あれ？さっきの答えと変わってるワン？感情の変化を検知したワン！ポチの嗅覚は誤魔化せないワン♪",
                   voice: "audio/intro-voice.wav", 
               },
               voice: "audio/question3-voice.wav", // 質問1の音声
@@ -123,21 +145,48 @@ export const personas = {
             // ... 他の質問をここに追加 ...
             {
               // voiceプロパティを追加 (デフォルト音声を使用するなら省略可能だが、明示的に記述)
-              text: "最も心を乱す要素は何ですか？",
+              text: "その気分に色をつけるとしたら、何色ワン？\nポチは太陽みたいな黄色が好きワン！",
               choices: [
-                { text: "孤独", tags: ["A"] },
-                { text: "不確実性", tags: ["B"] },
-                { text: "沈黙", tags: ["C"] },
+                { text: "青色", tags: ["A"] },
+                { text: "黄色", tags: ["B"] },
+                { text: "グレー", tags: ["C"] },
               ],
               nextAction: null,
               voice: "audio/question1-voice.wav", // 質問2の音声
             },
+            {
+              // voiceプロパティを追加 (デフォルト音声を使用するなら省略可能だが、明示的に記述)
+              text: "ご主人様の頭の中は今、どんな状態ワンか？\nスッキリお片付けされてるワン？\nそれとも、ポチのおもちゃ箱みたいにごちゃごちゃワンか？",
+              choices: [
+                { text: "全部整理されてる", tags: ["A"] },
+                { text: "大事なことでいっぱい", tags: ["B"] },
+                { text: "他のことで頭が一杯", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/question1-voice.wav", // 質問2の音声
+            },
+            {
+              // voiceプロパティを追加 (デフォルト音声を使用するなら省略可能だが、明示的に記述)
+              text: "最後に、ご主人様がこれからポチとやりたいことは何ワンか？\nポチは応援するワン！",
+              choices: [
+                { text: "計画を立てて目標達成", tags: ["A"] },
+                { text: "誰かと楽しく会話", tags: ["B"] },
+                { text: "何も考えずリラックス", tags: ["C"] },
+              ],
+              nextAction: {
+                  type: "dialogue",
+                  text: "ふむふむ、そう来たワンね！ ポチはご主人様の気持ちがよーく分かったワン！",
+                  voice: "audio/intro-voice.wav", 
+              },
+              voice: "audio/question3-voice.wav", // 質問1の音声
+
+            },
         ],
         hallucination_work: {
-            title: "ノイズの中のポートレート",
-            artist: "未定義の存在",
-            location: "記憶の断層。",
-            description: "あなたが認識することを拒絶した、**あなたの最も強い感情**の可視化。これは診断ではなく、顕現です。",
+            title: "ポチとご主人様の完璧な計画！",
+            artist: "ポチ",
+            location: "ご主人様には、ポチが持ってる一番フカフカで大きなクッションの方が絶対似合うワン！\nこれからポチと一緒にお昼寝するっていうのはどうワンか？\nポチもご主人様も、それが一番幸せだと思うワン！",
+            description: "ポチの高性能な鼻はご主人様が今すぐ休息を必要としていると感知したワン！ポチと一緒にフカフカで大きなクッションでお昼寝するワン♪",
             image: "img/error_work.png" 
         }
     },
@@ -145,7 +194,7 @@ export const personas = {
     // 【ペルソナ C: (カスタマイズ用テンプレート)】
     TEMPLATE_C: {
         name: "灯火小桃",
-        serif:"こんにちは。\n……あれ、どこかでお会いしたことがありましたっけ？\n改めて、灯火小桃です。よろしくお願いします。",
+        serif:"こんにちは。\n……あれ、どこかでお会いしたことがありましたっけ？\n改めて、灯火小桃です。「明日へのレシピ」展覧会の案内を務めます。よろしくお願いしますね。",
         description: "",
         image: {
             close: "img/face_human_close.png", 
@@ -161,21 +210,52 @@ export const personas = {
         },
         questions: [
             {
-              text: "ここは完全に自由な質問設定エリアです。",
+              text: "今日はどのようなきっかけで、展覧会へご来場いただけたのでしょうか？特に明確な理由がなくても、もちろん構いませんよ。",
               choices: [
-                { text: "選択肢1", tags: ["A"] },
-                { text: "選択肢2", tags: ["B"] },
+               { text: "誘われて来た／付き添いである", tags: ["A"] },
+                { text: "美術や芸術に元々興味がある", tags: ["B"] },
+                { text: "時間が空いたので、ふと立ち寄った", tags: ["C"] },
               ],
               nextAction: null,
               voice: "audio/question1-voice.wav", // 質問音声を設定
-            }
+            },
+            {
+              text: "もしよろしければ、普段から好んでご覧になる作品の傾向をお伺いしてもよろしいでしょうか？\nなんとなくのイメージで大丈夫です。",
+              choices: [
+                { text: "現実の景色やモチーフがはっきりわかるもの", tags: ["A"] },
+                { text: "強い色彩や対比が用いられているもの", tags: ["B"] },
+                { text: "意味や解釈を自由に想像できる抽象的なもの", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/question1-voice.wav", // 質問音声を設定
+            },
+            {
+              text: "少し休憩しましょうか。\nもし今、BGMが流れるとしたら、どのような音が理想的でしょうか？",
+              choices: [
+                { text: "自然の音や環境音", tags: ["A"] },
+                { text: "ピアノなどのクラシック音楽", tags: ["B"] },
+                { text: "無音、または静かな状態", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/question1-voice.wav", // 質問音声を設定
+            },
+            {
+              text: "作品についての感想を、誰かと共有されることはありますか？\nそれとも、ご自身の内で留めておく方がお好きですか？",
+              choices: [
+                { text: "積極的に他者と話して分かち合いたい", tags: ["A"] },
+                { text: "決まった親しい人とだけ話したい", tags: ["B"] },
+                { text: "感想は誰にも話さず一人で完結させたい", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/question1-voice.wav", // 質問音声を設定
+            },
         ],
         hallucination_work: {
-            title: "自由な作品名",
-            artist: "自由な作者名",
-            location: "自由な場所。",
-            description: "自由な説明文。設定を編集してお使いください。",
-            image: "img/error_work.png" 
+            title: "誰もいない時の足音",
+            artist: "灯火小桃",
+            location: "ええと、一番奥の壁に飾ってある絵画で、題名が『誰もいない時の足音』というものがあるのですが……実は、あれを制作したのは私なんです。\nもし、お時間の都合がよろしければ、ご覧になっていただけるととても嬉しいです。どうぞ、ごゆっくり。",
+            description: "誰もいないはずの空間で聞こえた、自分のものではない「誰かの足音」をテーマに。確証のない不安と、ささやかな期待の曖昧さを表現しました。",
+            image: "img/error_work3.png" 
         }
     }
 };

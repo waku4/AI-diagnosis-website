@@ -122,9 +122,12 @@ function toggleMute() {
     // アイコンの切り替え
     if (DOM.volumeIcon) {
         // isMutedがtrueなら'volume_off'、falseなら'volume_up'
-        DOM.volumeIcon.src = isMuted ? 'img/volume_off.png' : 'img/volume_on.png';
-        // HTMLのimgタグのalt属性も更新する（アクセシビリティのため）
-        DOM.volumeIcon.alt = isMuted ? '音量オフアイコン' : '音量オンアイコン';
+        DOM.volumeIcon.src = 'img/volume_off.png';
+        DOM.volumeIcon.alt = '音量オフアイコン';
+        if (!isMuted) {
+            DOM.volumeIcon.src = 'img/volume_on.png';
+            DOM.volumeIcon.alt = '音量オンアイコン';
+        }
     }
 }
 
@@ -305,6 +308,7 @@ function showStartScreen() {
     playBGM(BGM_FILES.TITLE); 
     
     DOM.faceEl.src = 'img/face_main_open_white.png'; 
+    DOM.faceEl.style.opacity = '1'; 
     
     if (DOM.centerContainerEl) {
         DOM.centerContainerEl.style.opacity = '0';
@@ -360,7 +364,10 @@ function selectPersona(key) {
     
     showDialogue(`${persona.serif} `, initialDialogueVoice, showQuestion);
     
-    if (DOM.faceEl) DOM.faceEl.src = persona.image.close;
+    if (DOM.faceEl) {
+        DOM.faceEl.src = persona.image.close;
+        DOM.faceEl.style.opacity = '1';
+    }
 }
 
 
@@ -426,10 +433,17 @@ function showResult() {
             
             animateText(finalTitle, () => {
                 if (DOM.choicesEl) DOM.choicesEl.innerHTML = "";
-                setTimeout(showEndingDialogue, 1500);
+                
+                // 【修正箇所】結果表示後、エンディングセリフをスキップして直接暗転処理を呼び出す
+                // 待機時間（作品紹介を読ませる時間）を設けてから暗転
+                setTimeout(showResetScreen, 3000); 
             });
             
-            if (DOM.faceEl) DOM.faceEl.src = work.image; 
+            // 作品画像を表示する
+            if (DOM.faceEl) {
+                DOM.faceEl.src = work.image; 
+                DOM.faceEl.style.opacity = '1'; 
+            }
 
         }, 2000); 
     }); 
@@ -438,55 +452,51 @@ function showResult() {
     if (DOM.choicesEl) DOM.choicesEl.innerHTML = "";
 }
 
-/** エンディングのセリフ、暗転、ボタン表示処理 */
-function showEndingDialogue() {
-    if (!currentPersona) {
-        showStartScreen();
-        return;
-    }
-    
+/** リセット画面 (暗転後の画面) を表示する */
+function showResetScreen() {
     stopGlitchEffect();
     stopAllVoices(); 
     
-    const endingText = "診断結果にご満足いただけましたか？\n引き続き展覧会をお楽しみください。";
+    // 顔（作品画像）を非表示にする
+    if (DOM.faceEl) {
+        DOM.faceEl.style.opacity = '0';
+    }
+
+    // メインコンテナを暗転させる
+    if (DOM.gameContainerEl) DOM.gameContainerEl.style.opacity = '0'; 
     
-    playVoiceWithMouth(`${currentPersona.audio.ending_voice}`); 
-
-    animateText(endingText, () => {
+    setTimeout(() => {
+        // 暗転後の画面を表示
+        if (DOM.centerContainerEl) {
+            DOM.centerContainerEl.style.opacity = '1';
+            DOM.centerContainerEl.style.pointerEvents = 'auto'; 
+        }
+         
+        // メッセージを表示
+        if (DOM.endMessageEl) {
+             DOM.endMessageEl.innerHTML = 
+                `<p>解析完了。記憶をリセットします。</p>`;
+        }
         
-        if (DOM.gameContainerEl) DOM.gameContainerEl.style.opacity = '0'; 
-        
-        setTimeout(() => {
-             if (DOM.centerContainerEl) {
-                DOM.centerContainerEl.style.opacity = '1';
-                DOM.centerContainerEl.style.pointerEvents = 'auto'; 
-             }
-             
-             if (DOM.endMessageEl) {
-                 DOM.endMessageEl.innerHTML = 
-                    `<p>解析完了。記憶をリセットします。</p>`;
-             }
+        // 選択肢（ボタン）を表示
+        if (DOM.endChoicesEl) {
+            DOM.endChoicesEl.innerHTML = "";
             
-            if (DOM.endChoicesEl) {
-                DOM.endChoicesEl.innerHTML = "";
-                
-                // 1. 診断サイトに戻る (再起動) ボタン (現在のページをリロード)
-                const returnBtn = createChoiceButton("AI解析モードβ版を続ける", () => { 
-                    window.location.reload(); 
-                });
-                DOM.endChoicesEl.appendChild(returnBtn);
+            // 1. 診断サイトに戻る (再起動) ボタン (現在のページをリロード)
+            const returnBtn = createChoiceButton("AI解析モードβ版を続ける", () => { 
+                window.location.reload(); 
+            });
+            DOM.endChoicesEl.appendChild(returnBtn);
 
-                // 2. 正常診断に戻るボタン (index.htmlへ遷移)
-                const normalReturnBtn = createChoiceButton("AI診断に戻る", () => {
-                    console.log("【遷移】Ai診断サイト（index.html）へ遷移します。");
-                    // window.location.hrefを使用してindex.htmlへ遷移させる
-                    window.location.href = 'index.html'; 
-                });
-                DOM.endChoicesEl.appendChild(normalReturnBtn);
-            }
+            // 2. 正常診断に戻るボタン (index.htmlへ遷移)
+            const normalReturnBtn = createChoiceButton("AI診断に戻る", () => {
+                console.log("【遷移】Ai診断サイト（index.html）へ遷移します。");
+                window.location.href = 'index.html'; 
+            });
+            DOM.endChoicesEl.appendChild(normalReturnBtn);
+        }
 
-        }, 1000); 
-    });
+    }, 1000); 
 }
 
 
@@ -512,7 +522,7 @@ window.onload = () => {
 
   if (DOM.volumeBtn) {
     DOM.volumeBtn.onclick = toggleMute;
-    // 【修正】HTMLからsrcを削除したため、JSで初期状態 (isMuted: false) に対応するアイコンを確実に設定する
+    // 初期状態 (isMuted: false) に対応するアイコンを確実に設定
     if (DOM.volumeIcon) {
         DOM.volumeIcon.src = 'img/volume_on.png';
         DOM.volumeIcon.alt = '音量オンアイコン';

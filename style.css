@@ -95,34 +95,50 @@ body {
     max-height: 330px; 
 }
 
-/* ナビゲーションボタンとドットの初期非表示設定 */
+/* ナビゲーションボタンのスタイルを画像用に調整 (前回の修正を維持) */
 .nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.7); 
-    color: white;
-    border: none;
-    padding: 8px 12px; 
+    
+    width: 50px;       /* ボタンのサイズを明確に定義 */
+    height: 50px;
+    background: transparent; 
+    color: transparent;      
+    border: none;            
+    padding: 0;              
+    
     cursor: pointer;
     z-index: 50;
     font-family: inherit;
     font-size: 0.9rem;
-    border-radius: 5px; 
-    transition: background 0.2s;
+    border-radius: 0; 
+    transition: transform 0.2s, opacity 0.2s;
     
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+    box-shadow: none; 
     display: none; 
 }
-.nav-btn:hover {
-    background: black;
+
+/* ナビゲーションボタン内の画像アイコンのスタイル */
+.nav-btn .arrow-icon {
+    display: block;
+    width: 100%; 
+    height: 100%; 
+    object-fit: contain;
+    image-rendering: pixelated; 
 }
+
+.nav-btn:hover {
+    transform: translateY(-50%) scale(1.1);
+    opacity: 0.8;
+}
+
 /* 個別のボタン配置 */
 #prev-btn {
-    left: 20px;
+    left: 10px; 
 }
 #next-btn {
-    right: 20px;
+    right: 10px; 
 }
 
 /* ドットナビゲーションの配置 */
@@ -190,14 +206,41 @@ body {
     display: flex; 
     align-items: center; 
     justify-content: center; 
+    
+    /* 遷移を滑らかにする（画像から枠線への切り替え） */
+    transition: background-image 0.3s, border 0.3s, padding 0.3s;
 }
 
 #text {
     width: 100%;
     font-size: 0.9rem;
     line-height: 1.6;
-    text-align: center; 
+    text-align: left; 
 }
+
+/* ================================================= */
+/* 【新規追加】正常診断結果時の吹き出しスタイル */
+/* ================================================= */
+
+/* #game-containerに.normal-resultクラスが付与された場合、吹き出しを無効化 */
+#game-container.normal-result #dialogue-bubble {
+    background-image: none; /* 吹き出し画像を非表示 */
+    background-color: white; /* 背景色を白に戻す */
+    
+    /* 代わりにレトロゲーム風の枠線を追加 */
+    border: 2px solid black; 
+    box-shadow: 4px 4px 0 black;
+    
+    /* 枠線に合わせてパディングを調整 */
+    padding: 20px 30px; 
+}
+
+/* 枠線に変更した際は、影の分だけマージンを減らして位置を維持 */
+#game-container.normal-result #dialogue-bubble {
+    margin-bottom: 25px; /* 既存の設定を維持 */
+}
+
+/* ================================================= */
 
 
 #start-btn {
@@ -375,6 +418,11 @@ body {
         margin-bottom: 20px;
     }
     
+    /* 正常診断時のモバイル対応パディング */
+    #game-container.normal-result #dialogue-bubble {
+        padding: 15px 25px; 
+    }
+    
     #text-box {
         padding: 15px 15px 20px 15px; /* 左右のパディングを減らす */
         min-height: 150px;
@@ -394,9 +442,15 @@ body {
 
     /* ナビゲーションボタンを少し小さく、端に寄せる */
     .nav-btn {
-        padding: 6px 8px;
-        font-size: 0.8rem;
+        padding: 0; 
+        width: 40px; 
+        height: 40px;
     }
-    #prev-btn { left: 10px; }
-    #next-btn { right: 10px; }
+    .nav-btn .arrow-icon {
+        width: 100%;
+        height: 100%;
+    }
+    
+    #prev-btn { left: 5px; }
+    #next-btn { right: 5px; }
 }

@@ -22,7 +22,7 @@ body {
 #game-container {
   width: 100%; /* モバイルでは幅いっぱい */
   max-width: 600px; /* PCでの最大幅 */
-  border: 2px solid white; /* 黒背景なので、境界線を白に変更 */
+  border: 2px solid black; /* 黒背景なので、境界線を白に変更 */
   background-color: black; 
   display: flex;
   flex-direction: column;
