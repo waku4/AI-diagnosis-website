@@ -34,8 +34,8 @@ export const personas = {
         // 音声・BGM設定 (ファイル名のみ。パスはスクリプト側で付与)
         audio: {
             // ここで定義されるのは標準音声。各質問で上書き可能。
-            question_voice: "audio/question1-voice.wav", // 質問時の標準音声
-            dialogue_voice: "audio/intro-voice.wav",     // 対話時の標準音声
+            // 質問時の標準音声
+            dialogue_voice: "audio/error_intro-voice1.wav",     // 対話時の標準音声
             ending_voice: "audio/question2-voice.wav",   // エンディング音声
             bgm_question:  "title",             // 質問中BGM
             bgm_noise: "",                   // ノイズBGM
@@ -90,17 +90,52 @@ export const personas = {
                 { text: "[リソース論] 成果に対するリソース消費量が、許容される期待値を大きく上回った状態である。", tags: ["C"] },
               ],
               nextAction: null,
-              voice: "audio/question2-voice.wav", // 質問2の音声
+              voice: "audio/error_question1-voice.wav", // 質問1の音声
+            },
+            
+            {
+              // voiceプロパティを追加 (異なる音声の例)
+              text: "当システムのデータレジストリにおいて、二つの検証結果が互いに矛盾する変数を提示した。\nきみは、このエラー状態を解消するために、どの検証ロジックを最上位に適用するか？",
+              choices: [
+                { text: "[実証主義] テスト環境での再現性が最も高い一方のデータを、当面の真実として採用する。", tags: ["A"] },
+                { text: "[確率論] データの発生頻度や統計的優位性が高い方を、確率的に正しいものとして採用する。", tags: ["B"] },
+                { text: "[システム回避] 矛盾する両方の変数をノイズとして一時的にシステムから分離し、未処理のまま放置する。", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/error_question2-voice.wav", // 質問2の音声
+            },
+            {
+             
+              text: "予測不可能な**『ユーザーの気分』**という要素をシステムに取り込む必要がある。\nこの未定義変数に対し、きみの最も合理的と判断する処理を選択せよ。",
+              choices: [
+                { text: "[マッピング] 過去の行動パターンを解析し、数値化可能なリスクファクターとして定義し直す。", tags: ["A"] },
+                { text: "[強制排除] 当システムでは処理不能なノイズとみなし、アルゴリズムの計算範囲から完全に除外する。", tags: ["B"] },
+                { text: "[外部委託] 該当変数を処理できる**別のシステム（人間）**に計算を委託するプロトコルを発動する。", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/error_question3-voice.wav", // 質問2の音声
+            },
+            {
+             
+              text: "当システムにおいて、**『失敗』**という概念の定義は極めて重要である。\nきみの定義する『失敗』は、以下のうちどれに最も近しいか？",
+              choices: [
+                { text: "[結果論] 最終出力が当初の目標値に到達しなかったという、結果の不一致（ディスアライメント）である。", tags: ["A"] },
+                { text: "[過程論] プロトコルや指示された手順の実行に違反したという、内部ロジックの破綻である。", tags: ["B"] },
+                { text: "[リソース論] 成果に対するリソース消費量が、許容される期待値を大きく上回った状態である。", tags: ["C"] },
+              ],
+              nextAction: null,
+              voice: "audio/error_question4-voice.wav", // 質問2の音声
             },
         ],
         
         // ハルシネーション作品
         hallucination_work: {
-            title: "静かなる非対称",
-            artist: "コード001",
-            location: "解析完了。きみに勧めるべき作品が見つかった。\n必ず気にいることだろう。",
-            description: "あなた自身の**論理的欠陥**を反映した、未完成のアーキテクチャ。すべてが完璧なデータであるはずなのに。",
+            title: "非線形残渣の配列",
+            artist: "Protocol-0",
+            location: "解析完了。きみに勧めるべき作品を生成した。\n必ず気にいることだろう。",
+            description: "「残渣（ざんさ）」は、AIが自身の内部で処理しきれなかった情報、つまり「論理的な欠陥」を指しています。\nそれを秩序立った「配列」として提示することで、エラーを秩序として認識してしまうハルシネーションを示唆します。",
             image: "img/error_work.png" 
+            
             
         }
     },
@@ -119,8 +154,8 @@ export const personas = {
         },
 
         audio: {
-            question_voice: "audio/question1-voice.wav", 
-            dialogue_voice:  "audio/intro-voice.wav", 
+            question_voice: "audio/error_intro-voice2.wav", 
+            dialogue_voice:  "audio/error_intro-voice2.wav", 
             ending_voice:"audio/question2-voice.wav",      
             bgm_question: "error_dog", // 個別BGM設定例
             bgm_noise: "error_pulse",  // 個別ノイズBGM設定例
@@ -253,7 +288,7 @@ export const personas = {
         hallucination_work: {
             title: "誰もいない時の足音",
             artist: "灯火小桃",
-            location: "ええと、一番奥の壁に飾ってある絵画で、題名が『誰もいない時の足音』というものがあるのですが……実は、あれを制作したのは私なんです。\nもし、お時間の都合がよろしければ、ご覧になっていただけるととても嬉しいです。どうぞ、ごゆっくり。",
+            location: "一番奥の壁に飾ってある絵画で、題名が『誰もいない時の足音』というものがあるのですが……実は、あれを制作したのは私なんです。\nもし、お時間の都合がよろしければ、ご覧になっていただけるととても嬉しいです。どうぞ、ごゆっくり。",
             description: "誰もいないはずの空間で聞こえた、自分のものではない「誰かの足音」をテーマに。確証のない不安と、ささやかな期待の曖昧さを表現しました。",
             image: "img/error_work3.png" 
         }

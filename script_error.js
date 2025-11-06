@@ -32,7 +32,8 @@ let questionIndex = 0;
 let glitchIntervalId = null;
 let currentPersona = null; 
 
-let isMuted = false; // 【修正】初期状態: 音量ON (ミュートされていない)
+// 【変更点 1】初期状態: 音量OFF (ミュートされている) に変更
+let isMuted = true; 
 
 //======================================
 // 🎧 BGM・音声制御関数 
@@ -48,6 +49,7 @@ function playBGM(name) {
 
   const bgm = new Audio(`audio/${name}.mp3`);
   bgm.loop = true;
+  // 【変更点 2】isMutedの状態を反映
   bgm.volume = isMuted ? 0 : BGM_VOLUME; 
   bgm.play().catch(() => console.warn(`BGM '${name}' 再生がブロックされました。`));
   currentBGM = bgm;
@@ -76,7 +78,8 @@ function playVoiceWithMouth(src, onEnd) {
   stopAllVoices();
 
   const voice = new Audio(src);
-  voice.volume = isMuted ? 0 : 1; // 【修正】isMutedの状態に基づいて音量を設定
+  // 【変更点 3】isMutedの状態を反映
+  voice.volume = isMuted ? 0 : 1; 
   voice.play().catch(() => console.warn("音声再生がブロックされました。"));
   currentVoice = voice; 
 
@@ -472,10 +475,10 @@ function showResetScreen() {
             DOM.centerContainerEl.style.pointerEvents = 'auto'; 
         }
          
-        // メッセージを表示
+        // 【修正点】メッセージを表示
         if (DOM.endMessageEl) {
              DOM.endMessageEl.innerHTML = 
-                `<p>解析完了。記憶をリセットします。</p>`;
+                `<p></p>`;
         }
         
         // 選択肢（ボタン）を表示
@@ -524,8 +527,8 @@ window.onload = () => {
     DOM.volumeBtn.onclick = toggleMute;
     // 初期状態 (isMuted: false) に対応するアイコンを確実に設定
     if (DOM.volumeIcon) {
-        DOM.volumeIcon.src = 'img/volume_on.png';
-        DOM.volumeIcon.alt = '音量オンアイコン';
+        DOM.volumeIcon.src = 'img/volume_off.png';
+        DOM.volumeIcon.alt = '音量オフアイコン';
     }
   }
 
