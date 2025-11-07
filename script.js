@@ -117,7 +117,7 @@ function stopAllVoices() {
     
     // 口を閉じる処理
     if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-        // ★修正2: img/ プレフィックスを動的に付与
+        // ★修正2: img/ プレフィックスを動的に付与 (既存のロジックは維持)
         STATE.currentMouthImage.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
     }
 }
@@ -135,7 +135,7 @@ function playVoiceWithMouth(src, onEnd) {
     const mouthInterval = setInterval(() => {
         mouthOpen = !mouthOpen;
         if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-            // ★修正3: img/ プレフィックスを動的に付与
+            // ★修正3: img/ プレフィックスを動的に付与 (既存のロジックは維持)
             STATE.currentMouthImage.src = mouthOpen 
                 ? `img/${CONSTANTS.IMAGE.FACE_OPEN}` 
                 : `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
@@ -147,7 +147,7 @@ function playVoiceWithMouth(src, onEnd) {
     newVoice.addEventListener("ended", () => {
         clearInterval(mouthInterval);
         if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-            // ★修正4: img/ プレフィックスを動的に付与
+            // ★修正4: img/ プレフィックスを動的に付与 (既存のロジックは維持)
             STATE.currentMouthImage.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
         }
         if (onEnd) onEnd();
@@ -172,7 +172,7 @@ function toggleMuteAllSounds() {
 
     // アイコンの画像を切り替える
     if (DOM.volumeIcon) {
-        // ★修正5: img/ プレフィックスを動的に付与
+        // ★修正5: img/ プレフィックスを動的に付与 (既存のロジックは維持)
         DOM.volumeIcon.src = STATE.isMuted 
             ? `img/${CONSTANTS.IMAGE.VOLUME_OFF}` 
             : `img/${CONSTANTS.IMAGE.VOLUME_ON}`;
@@ -277,7 +277,7 @@ function initializeQASlider() {
     
     const img = document.createElement('img');
     img.className = 'slide-image';
-    // ★修正6: img/ プレフィックスを動的に付与
+    // ★修正6: img/ プレフィックスを動的に付与 (既存のロジックは維持)
     img.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`; 
     img.alt = "AIアシスタントの顔";
 
@@ -317,7 +317,7 @@ function renderWorkSlider(work) {
     
     const imageUrls = work.images && Array.isArray(work.images) && work.images.length > 0
         ? work.images.map(imgName => `img/${imgName}`) // ★既存のimg/付与ロジックは維持
-        // ★修正7: プレースホルダー画像にも img/ プレフィックスを動的に付与
+        // ★修正7: プレースホルダー画像にも img/ プレフィックスを動的に付与 (既存のロジックは維持)
         : [`img/${CONSTANTS.IMAGE.WORK_PLACEHOLDER}`];
 
     imageUrls.forEach(url => {
@@ -357,7 +357,7 @@ function updateProgressBar() {
         DOM.progressContainer.style.display = 'flex'; 
         
         const totalQuestions = questions.length;
-        // 質問は0から始まるため、表示は+1
+        // 質問は0から始まるため、進捗計算を修正
         const currentQuestionNumber = STATE.questionIndex; 
         
         // 質問数を1から始めるため、進捗計算を修正
@@ -423,6 +423,7 @@ function accumulateTags() {
 /**
  * ユーザーのタグスコアに基づき、最適な作品を決定する
  * (一致度スコアと不一致ペナルティを適用)
+ * ★修正: 作品側の重み(work.weightedTags)を考慮に入れるようにロジックを更新
  * @param {Object<string, number>} userTagScores - ユーザーのタグスコア集計
  * @param {{name: string, score: number}[]} maxTags - ユーザーの最重要タグリスト
  * @returns {Object|null} - 最もスコアの高い作品オブジェクト
@@ -438,20 +439,23 @@ function calculateBestMatch(userTagScores, maxTags) {
         let matchScore = 0;
         
         // 1. 一致度スコアの計算 (Positive Match)
-        work.tags.forEach(workTag => {
+        const workWeightedTags = work.weightedTags || {}; // 念のためデフォルト値
+        
+        // 作品側の重み (workWeight) とユーザーのスコア (userTagScores[workTag]) を掛け合わせて加算
+        Object.entries(workWeightedTags).forEach(([workTag, workWeight]) => {
             if (userTagScores[workTag]) {
-                // 作品タグがユーザーのスコアにある場合、そのスコアを加算
-                matchScore += userTagScores[workTag];
+                // ユーザーのスコア × 作品側の重み を加算
+                matchScore += userTagScores[workTag] * workWeight;
             }
         });
 
         // 2. 不一致ペナルティの計算 (Negative Penalty)
         maxTags.forEach(maxTag => {
-            const isMatched = work.tags.includes(maxTag.name);
+            // 作品にタグが存在するか、かつ重みが 0 より大きいかをチェック
+            const workHasTag = workWeightedTags.hasOwnProperty(maxTag.name) && workWeightedTags[maxTag.name] > 0;
             
-            if (!isMatched) {
+            if (!workHasTag) {
                 // 最重要タグが作品に含まれていない場合、ペナルティを適用
-                // ペナルティ値は、その最重要タグのユーザーのスコアにレートを掛けたもの
                 const penaltyValue = Math.ceil(maxTag.score * penaltyRate);
                 matchScore -= penaltyValue;
                 console.log(`[Penalty] 作品: ${work.title}, タグ: ${maxTag.name}が不足。${penaltyValue}点減点。`);
@@ -488,8 +492,6 @@ function handleAnswer(choice) {
     showQuestion(); 
 }
 
-// **既存の getBestMatchWork は削除し、calculateBestMatch を直接使う**
-
 
 //======================================
 // 🖥️ シーン関数 
@@ -505,7 +507,7 @@ function showStartScreen() {
 
     // 初期状態として音量アイコンをONに設定
     if (DOM.volumeIcon) {
-        // ★修正8: img/ プレフィックスを動的に付与
+        // ★修正8: img/ プレフィックスを動的に付与 (既存のロジックは維持)
         DOM.volumeIcon.src = STATE.isMuted 
             ? `img/${CONSTANTS.IMAGE.VOLUME_OFF}` 
             : `img/${CONSTANTS.IMAGE.VOLUME_ON}`;
