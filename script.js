@@ -20,13 +20,13 @@ const CONSTANTS = {
         RESULT: "result",
     },
 
-    // 画像ファイル名 (ダミー)
+    // 画像ファイル名 (ダミー) - ★修正1: img/ プレフィックスを削除
     IMAGE: {
-        FACE_CLOSED: "img/face_main_close.png",
-        FACE_OPEN: "img/face_main_open.png",
-        WORK_PLACEHOLDER: "img/placeholder.png",
-        VOLUME_ON: "img/volume_on.png",  // 音量ONアイコン
-        VOLUME_OFF: "img/volume_off.png",// 音量OFFアイコン
+        FACE_CLOSED: "face_main_close.png", // ファイル名のみ
+        FACE_OPEN: "face_main_open.png",   // ファイル名のみ
+        WORK_PLACEHOLDER: "placeholder.png", // ファイル名のみ
+        VOLUME_ON: "volume_on.png",      // 音量ONアイコン
+        VOLUME_OFF: "volume_off.png",    // 音量OFFアイコン
     },
     // オーディオファイル名 (ダミー)
     AUDIO: {
@@ -79,7 +79,6 @@ const DOM = {
     volumeToggleBtn: null,
     volumeIcon: null,
     
-    // ★修正点1: gameContainerを追加
     gameContainer: null,
 };
 
@@ -118,7 +117,8 @@ function stopAllVoices() {
     
     // 口を閉じる処理
     if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-        STATE.currentMouthImage.src = CONSTANTS.IMAGE.FACE_CLOSED;
+        // ★修正2: img/ プレフィックスを動的に付与
+        STATE.currentMouthImage.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
     }
 }
 
@@ -135,7 +135,10 @@ function playVoiceWithMouth(src, onEnd) {
     const mouthInterval = setInterval(() => {
         mouthOpen = !mouthOpen;
         if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-            STATE.currentMouthImage.src = mouthOpen ? CONSTANTS.IMAGE.FACE_OPEN : CONSTANTS.IMAGE.FACE_CLOSED;
+            // ★修正3: img/ プレフィックスを動的に付与
+            STATE.currentMouthImage.src = mouthOpen 
+                ? `img/${CONSTANTS.IMAGE.FACE_OPEN}` 
+                : `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
         }
     }, CONSTANTS.MOUTH_SPEED);
 
@@ -144,7 +147,8 @@ function playVoiceWithMouth(src, onEnd) {
     newVoice.addEventListener("ended", () => {
         clearInterval(mouthInterval);
         if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-            STATE.currentMouthImage.src = CONSTANTS.IMAGE.FACE_CLOSED;
+            // ★修正4: img/ プレフィックスを動的に付与
+            STATE.currentMouthImage.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
         }
         if (onEnd) onEnd();
         delete STATE.voice.current;
@@ -168,7 +172,10 @@ function toggleMuteAllSounds() {
 
     // アイコンの画像を切り替える
     if (DOM.volumeIcon) {
-        DOM.volumeIcon.src = STATE.isMuted ? CONSTANTS.IMAGE.VOLUME_OFF : CONSTANTS.IMAGE.VOLUME_ON;
+        // ★修正5: img/ プレフィックスを動的に付与
+        DOM.volumeIcon.src = STATE.isMuted 
+            ? `img/${CONSTANTS.IMAGE.VOLUME_OFF}` 
+            : `img/${CONSTANTS.IMAGE.VOLUME_ON}`;
     }
 }
 
@@ -270,7 +277,8 @@ function initializeQASlider() {
     
     const img = document.createElement('img');
     img.className = 'slide-image';
-    img.src = CONSTANTS.IMAGE.FACE_CLOSED; 
+    // ★修正6: img/ プレフィックスを動的に付与
+    img.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`; 
     img.alt = "AIアシスタントの顔";
 
     DOM.slider.appendChild(img);
@@ -287,6 +295,13 @@ function initializeQASlider() {
         DOM.dotNav.style.display = 'none'; 
         DOM.dotNav.innerHTML = '';         
     }
+    
+    // QAモードでは親要素の高さ制約を解除（CSS制御に戻す）
+    const sliderWrapper = DOM.slider.parentElement;
+    if (sliderWrapper) {
+        sliderWrapper.style.height = 'auto'; 
+    }
+
 
     STATE.currentMouthImage = img; // 口パク対象を設定
     STATE.currentSlideIndex = 0;
@@ -301,8 +316,9 @@ function renderWorkSlider(work) {
     STATE.slideImages = [];
     
     const imageUrls = work.images && Array.isArray(work.images) && work.images.length > 0
-        ? work.images.map(imgName => `img/${imgName}`)
-        : [CONSTANTS.IMAGE.WORK_PLACEHOLDER];
+        ? work.images.map(imgName => `img/${imgName}`) // ★既存のimg/付与ロジックは維持
+        // ★修正7: プレースホルダー画像にも img/ プレフィックスを動的に付与
+        : [`img/${CONSTANTS.IMAGE.WORK_PLACEHOLDER}`];
 
     imageUrls.forEach(url => {
         const img = document.createElement('img');
@@ -489,7 +505,10 @@ function showStartScreen() {
 
     // 初期状態として音量アイコンをONに設定
     if (DOM.volumeIcon) {
-        DOM.volumeIcon.src = STATE.isMuted ? CONSTANTS.IMAGE.VOLUME_OFF : CONSTANTS.IMAGE.VOLUME_ON;
+        // ★修正8: img/ プレフィックスを動的に付与
+        DOM.volumeIcon.src = STATE.isMuted 
+            ? `img/${CONSTANTS.IMAGE.VOLUME_OFF}` 
+            : `img/${CONSTANTS.IMAGE.VOLUME_ON}`;
     }
     
     // 画面切り替え時にクラスを削除
@@ -514,7 +533,7 @@ function showIntroScene() {
     updateProgressBar(); 
     initializeQASlider(); 
     
-    // ★修正点2: イントロに戻る際にクラスを削除
+    // イントロに戻る際にクラスを削除
     if (DOM.gameContainer) {
         DOM.gameContainer.classList.remove('normal-result');
     }
@@ -585,7 +604,7 @@ function showLoading() {
     // ローディング中は音量ボタンを非表示（UIをシンプルに保つため）
     if (DOM.volumeToggleBtn) DOM.volumeToggleBtn.classList.add("hidden"); 
     
-    // ★修正点3: ローディング前（質問後）はクラスを削除しておく
+    // ローディング前（質問後）はクラスを削除しておく
     if (DOM.gameContainer) {
         DOM.gameContainer.classList.remove('normal-result');
     }
@@ -628,13 +647,24 @@ function renderResult(recommendedWork) {
         
     let resultText;
     if (recommendedWork) {
-        // ★修正点4: 正常診断の場合にクラスを追加
+        // 正常診断の場合にクラスを追加
         if (DOM.gameContainer) {
             DOM.gameContainer.classList.add('normal-result');
         }
 
         renderWorkSlider(recommendedWork);
         
+        // --- 画像表示強制修正: CSSで画像エリアが隠れる/高さが0になる問題の回避 ---
+        const sliderWrapper = DOM.slider.parentElement;
+        if (sliderWrapper) {
+            // QAモードで設定されたかもしれない高さをリセットし、結果表示に適した固定の高さを設定
+            sliderWrapper.style.height = '400px'; 
+            sliderWrapper.style.overflow = 'hidden'; 
+            // 念のためスライダー自体も視覚的にリセット
+            DOM.slider.style.opacity = '1'; 
+        }
+        // --- 画像表示強制修正 終点 ---
+
         resultText =
             `${resultTitle}\n` +
             `あなたにおすすめの作品は……\n` +
@@ -643,10 +673,12 @@ function renderResult(recommendedWork) {
             `【作品紹介】\n` +
             `${recommendedWork.description}`;
     } else {
-        // ★修正点5: 結果が見つからない（異常診断）の場合はクラスを削除
+        // 結果が見つからない（異常診断）の場合はクラスを削除
         if (DOM.gameContainer) {
             DOM.gameContainer.classList.remove('normal-result');
         }
+        
+        // QAモードに戻す際に高さ制約を解除 (initializeQASliderで実施済)
         
         resultText = `${resultTitle}\n残念ながらおすすめの作品が見つかりませんでした。`;
         initializeQASlider(); 
@@ -709,7 +741,7 @@ function cacheDOMElements() {
     DOM.volumeToggleBtn = document.getElementById("volume-toggle");
     DOM.volumeIcon = document.getElementById("volume-icon");
     
-    // ★修正点1: gameContainerを取得
+    // gameContainerを取得
     DOM.gameContainer = document.getElementById("game-container");
 
     // 全ての要素が取得できたかチェック
