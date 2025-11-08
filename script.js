@@ -9,7 +9,7 @@ const CONSTANTS = {
     MOUTH_SPEED: 150, // 口パクの切り替え速度 (ms)
     TEXT_SPEED: 50,   // テキスト表示速度 (ms)
     LOADING_DURATION: 1500, // ローディング時間 (ms)
-    PENALTY_RATE: 0.5, // 不一致ペナルティの割合 (最重要タグスコアの50%を減点)
+    // PENALTY_RATE: 0.5, // ★IDFロジックでは不要になったためコメントアウト
 
     // シーン名
     SCENE: {
@@ -20,18 +20,18 @@ const CONSTANTS = {
         RESULT: "result",
     },
 
-    // 画像ファイル名 (ダミー) - ★修正1: img/ プレフィックスを削除
+    // 画像ファイル名 (ダミー) - ファイル名のみを保持
     IMAGE: {
-        FACE_CLOSED: "face_main_close.png", // ファイル名のみ
-        FACE_OPEN: "face_main_open.png",   // ファイル名のみ
-        WORK_PLACEHOLDER: "placeholder.png", // ファイル名のみ
-        VOLUME_ON: "volume_on.png",      // 音量ONアイコン
-        VOLUME_OFF: "volume_off.png",    // 音量OFFアイコン
+        FACE_CLOSED: "face_main_close.png", 
+        FACE_OPEN: "face_main_open.png",   
+        WORK_PLACEHOLDER: "placeholder.png", 
+        VOLUME_ON: "volume_on.png",      
+        VOLUME_OFF: "volume_off.png",    
     },
     // オーディオファイル名 (ダミー)
     AUDIO: {
-        MAIN_BGM: "main",      // タイトル、イントロ、質問で使用
-        RESULT_BGM: "result",  // 結果画面BGM
+        MAIN_BGM: "main",      
+        RESULT_BGM: "result",  
         START_VOICE: "audio/start-voice.wav",
         INTRO_VOICE: "audio/intro-voice.wav",
     }
@@ -96,7 +96,6 @@ function playBGM(name) {
     const bgm = new Audio(`audio/${name}.mp3`);
     bgm.loop = true;
     bgm.volume = STATE.isMuted ? 0 : CONSTANTS.BGM_VOLUME; // ミュート状態を反映
-    // Play()の返り値はPromiseなので、エラー回避のためcatchを追加
     bgm.play().catch(() => console.warn(`[Audio] BGM再生がブロックされました: ${name}`));
     STATE.currentBGM = bgm;
 }
@@ -117,7 +116,6 @@ function stopAllVoices() {
     
     // 口を閉じる処理
     if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-        // ★修正2: img/ プレフィックスを動的に付与 (既存のロジックは維持)
         STATE.currentMouthImage.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
     }
 }
@@ -127,7 +125,7 @@ function playVoiceWithMouth(src, onEnd) {
     stopAllVoices();
 
     const newVoice = new Audio(src);
-    newVoice.volume = STATE.isMuted ? 0 : 1; // 音声は通常ボリュームで、ミュート状態を反映
+    newVoice.volume = STATE.isMuted ? 0 : 1; // ミュート状態を反映
     newVoice.play().catch(() => console.warn(`[Audio] 音声再生がブロックされました: ${src}`));
     STATE.voice.current = newVoice; 
 
@@ -135,7 +133,6 @@ function playVoiceWithMouth(src, onEnd) {
     const mouthInterval = setInterval(() => {
         mouthOpen = !mouthOpen;
         if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-            // ★修正3: img/ プレフィックスを動的に付与 (既存のロジックは維持)
             STATE.currentMouthImage.src = mouthOpen 
                 ? `img/${CONSTANTS.IMAGE.FACE_OPEN}` 
                 : `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
@@ -147,7 +144,6 @@ function playVoiceWithMouth(src, onEnd) {
     newVoice.addEventListener("ended", () => {
         clearInterval(mouthInterval);
         if (STATE.currentMouthImage && STATE.currentScene !== CONSTANTS.SCENE.RESULT) {
-            // ★修正4: img/ プレフィックスを動的に付与 (既存のロジックは維持)
             STATE.currentMouthImage.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`;
         }
         if (onEnd) onEnd();
@@ -172,7 +168,6 @@ function toggleMuteAllSounds() {
 
     // アイコンの画像を切り替える
     if (DOM.volumeIcon) {
-        // ★修正5: img/ プレフィックスを動的に付与 (既存のロジックは維持)
         DOM.volumeIcon.src = STATE.isMuted 
             ? `img/${CONSTANTS.IMAGE.VOLUME_OFF}` 
             : `img/${CONSTANTS.IMAGE.VOLUME_ON}`;
@@ -228,8 +223,11 @@ function animateText(text, callback) {
 function goToSlide(index) {
     if (STATE.slideImages.length === 0 || !DOM.slider) return;
 
-    if (index < 0 || index >= STATE.slideImages.length) {
-        return; 
+    // ★修正: ループするように変更
+    if (index < 0) {
+        index = STATE.slideImages.length - 1;
+    } else if (index >= STATE.slideImages.length) {
+        index = 0;
     }
     
     STATE.currentSlideIndex = index;
@@ -277,7 +275,6 @@ function initializeQASlider() {
     
     const img = document.createElement('img');
     img.className = 'slide-image';
-    // ★修正6: img/ プレフィックスを動的に付与 (既存のロジックは維持)
     img.src = `img/${CONSTANTS.IMAGE.FACE_CLOSED}`; 
     img.alt = "AIアシスタントの顔";
 
@@ -302,7 +299,6 @@ function initializeQASlider() {
         sliderWrapper.style.height = 'auto'; 
     }
 
-
     STATE.currentMouthImage = img; // 口パク対象を設定
     STATE.currentSlideIndex = 0;
     stopAllVoices(); 
@@ -316,8 +312,7 @@ function renderWorkSlider(work) {
     STATE.slideImages = [];
     
     const imageUrls = work.images && Array.isArray(work.images) && work.images.length > 0
-        ? work.images.map(imgName => `img/${imgName}`) // ★既存のimg/付与ロジックは維持
-        // ★修正7: プレースホルダー画像にも img/ プレフィックスを動的に付与 (既存のロジックは維持)
+        ? work.images.map(imgName => `img/${imgName}`) 
         : [`img/${CONSTANTS.IMAGE.WORK_PLACEHOLDER}`];
 
     imageUrls.forEach(url => {
@@ -357,10 +352,8 @@ function updateProgressBar() {
         DOM.progressContainer.style.display = 'flex'; 
         
         const totalQuestions = questions.length;
-        // 質問は0から始まるため、進捗計算を修正
         const currentQuestionNumber = STATE.questionIndex; 
         
-        // 質問数を1から始めるため、進捗計算を修正
         const progress = ((currentQuestionNumber) / totalQuestions) * 100;
         
         DOM.progressText.textContent = `質問 ${currentQuestionNumber + 1} / ${totalQuestions} 問目`;
@@ -374,7 +367,7 @@ function updateProgressBar() {
 
 
 //======================================
-// 🛠️ 補助関数 (タグ解析)
+// 🛠️ 補助関数 (タグ解析) - ★data.jsから移植★
 //======================================
 
 /**
@@ -385,101 +378,108 @@ function updateProgressBar() {
 function parseTag(tagString) {
     const parts = tagString.split('*');
     const name = parts[0].trim();
-    // 重みが指定されていなければ 1 とする
-    const weight = parts.length > 1 ? parseInt(parts[1], 10) : 1;
-    return { name, weight };
+    // ★修正: parseInt から parseFloat に変更し、小数点の重みに対応
+    const weight = parts.length > 1 ? parseFloat(parts[1]) : 1.0;
+    return { name, weight: isNaN(weight) ? 1.0 : weight }; // 無効な場合は1.0
 }
 
 
 //======================================
-// 📊 高度な診断ロジックの核となる関数
+// 📊 高度な診断ロジック (data.jsから移植)
 //======================================
 
 /**
- * 1. ユーザーの全回答からタグごとの合計スコアを算出する (重み付け反映)
- * 2. 最もスコアが高いタグ（ペナルティ判定用）を抽出する (上位2つ)
- * @returns {{tagScores: Object<string, number>, maxTags: {name: string, score: number}[]}}
+ * ユーザーの回答を処理し、作品推薦に使うためのタグの重みを集計します。
+ * @param {string[]} answers - 蓄積されたタグ（重み付き文字列のまま: 例 "vivid*3"）
+ * @returns {Object<string, number>} - タグ名と、ユーザー回答によって付与された合計重み
  */
-function accumulateTags() {
-    const tagScores = {};
-    
-    // スコア集計 (STATE.answersは重み付き文字列の配列)
-    STATE.answers.forEach(tagStr => {
-        const { name, weight } = parseTag(tagStr);
-        tagScores[name] = (tagScores[name] || 0) + weight;
+function aggregateUserTags(answers) {
+    const userTags = {};
+
+    answers.forEach(tagString => {
+        const { name, weight } = parseTag(tagString); // 上記のparseTagを使用
+        userTags[name] = (userTags[name] || 0) + weight;
     });
 
-    // 最大スコアのタグを特定 (ペナルティ判定に使用)
-    const sortedTags = Object.entries(tagScores)
-        .map(([name, score]) => ({ name, score }))
-        .sort((a, b) => b.score - a.score);
-        
-    // スコア上位2つのタグを抽出
-    const maxTags = sortedTags.slice(0, 2); 
-
-    return { tagScores, maxTags };
+    return userTags;
 }
 
 /**
- * ユーザーのタグスコアに基づき、最適な作品を決定する
- * (一致度スコアと不一致ペナルティを適用)
- * ★修正: 作品側の重み(work.weightedTags)を考慮に入れるようにロジックを更新
- * @param {Object<string, number>} userTagScores - ユーザーのタグスコア集計
- * @param {{name: string, score: number}[]} maxTags - ユーザーの最重要タグリスト
- * @returns {Object|null} - 最もスコアの高い作品オブジェクト
+ * 質問の回答に基づき、作品を推薦します。
+ * IDF（希少性ボーナス）と総重みによる正規化を適用します。
+ * @param {Object<string, number>} userTags - ユーザーが獲得したタグとその合計重み
+ * @returns {{scoredWorks: Array<Object>, tagIDF: Object}} - 正規化されたスコア順にソートされた作品リストとIDF値
  */
-function calculateBestMatch(userTagScores, maxTags) {
-    let bestMatch = null;
-    // スコアは負の値になる可能性があるため、-Infinityで初期化
-    let highestScore = -Infinity;
-    
-    const penaltyRate = CONSTANTS.PENALTY_RATE; 
+function recommendWorks(userTags) {
+    // ----------------------------------------------------
+    // STEP 1: タグの出現頻度 (DF) と希少性ボーナス (IDF) の計算
+    // ----------------------------------------------------
+    const tagDF = {}; // Document Frequency: そのタグを持つ作品数
+    const totalWorks = works.length; // インポートされたworksを使用
 
+    // 全作品を走査し、各タグの出現作品数をカウント
     works.forEach(work => {
-        let matchScore = 0;
-        
-        // 1. 一致度スコアの計算 (Positive Match)
-        const workWeightedTags = work.weightedTags || {}; // 念のためデフォルト値
-        
-        // 作品側の重み (workWeight) とユーザーのスコア (userTagScores[workTag]) を掛け合わせて加算
-        Object.entries(workWeightedTags).forEach(([workTag, workWeight]) => {
-            if (userTagScores[workTag]) {
-                // ユーザーのスコア × 作品側の重み を加算
-                matchScore += userTagScores[workTag] * workWeight;
-            }
-        });
-
-        // 2. 不一致ペナルティの計算 (Negative Penalty)
-        maxTags.forEach(maxTag => {
-            // 作品にタグが存在するか、かつ重みが 0 より大きいかをチェック
-            const workHasTag = workWeightedTags.hasOwnProperty(maxTag.name) && workWeightedTags[maxTag.name] > 0;
-            
-            if (!workHasTag) {
-                // 最重要タグが作品に含まれていない場合、ペナルティを適用
-                const penaltyValue = Math.ceil(maxTag.score * penaltyRate);
-                matchScore -= penaltyValue;
-                console.log(`[Penalty] 作品: ${work.title}, タグ: ${maxTag.name}が不足。${penaltyValue}点減点。`);
-            }
-        });
-        
-        console.log(`作品: ${work.title}, 最終スコア: ${matchScore}`);
-
-        // スコア更新
-        if (matchScore > highestScore) {
-            highestScore = matchScore;
-            bestMatch = work;
-        } else if (matchScore === highestScore && bestMatch === null) {
-            // 同点の場合、最初に現れた作品を採用
-            bestMatch = work;
+        for (const tag in work.weightedTags) {
+            tagDF[tag] = (tagDF[tag] || 0) + 1;
         }
     });
 
-    return bestMatch;
+    const tagIDF = {}; // Inverse Document Frequency: 希少性ボーナス
+    for (const tag in tagDF) {
+        // IDF = 1 + log(総作品数 / タグ出現作品数)
+        // 1を足すことで、最も一般的なタグでも係数が1.0以上になるように調整
+        tagIDF[tag] = 1 + Math.log(totalWorks / tagDF[tag]);
+    }
+    // ----------------------------------------------------
+
+
+    const scoredWorks = works.map(work => {
+        let matchScore = 0; // S_i: ユーザーの回答と一致したタグから得られた合計スコア
+        let totalWorkWeight = 0; // N_i: 作品の持つタグの重みの合計（正規化の分母）
+
+        // 1. 作品が持つタグを走査し、S_iとN_iを同時に計算
+        for (const tagName in work.weightedTags) {
+            const workWeight = work.weightedTags[tagName];
+            
+            // N_i: 作品が持つタグの重みを合計 (正規化の分母)
+            totalWorkWeight += workWeight;
+
+            // S_i: ユーザーが持っているタグであれば、スコアを加算
+            if (userTags[tagName]) {
+                // ユーザーのタグ重み * 作品のタグ重み
+                let scoreContribution = userTags[tagName] * workWeight;
+                
+                // --- 希少性ボーナス (IDF) を乗算 ---
+                scoreContribution *= (tagIDF[tagName] || 1.0); 
+
+                matchScore += scoreContribution;
+            }
+        }
+
+        let normalizedScore = 0;
+        
+        // 2. 正規化されたスコアを計算 (適合率)
+        // totalWorkWeight（作品のタグ総量）が0でなければ、獲得スコアを総量で割る
+        if (totalWorkWeight > 0) {
+            normalizedScore = matchScore / totalWorkWeight;
+        }
+
+        return {
+            ...work,
+            normalizedScore, // 最終的な適合率 (この値でソートする)
+            matchScore: matchScore, // デバッグ用
+        };
+    });
+
+    // 3. 正規化されたスコア（normalizedScore）に基づいて降順にソート
+    scoredWorks.sort((a, b) => b.normalizedScore - a.normalizedScore);
+
+    return { scoredWorks, tagIDF }; // IDF値も返してデバッグを容易にする
 }
 
 
 //======================================
-// ⚙️ ロジック関数
+// ⚙️ ロジック関数 (UI制御)
 //======================================
 
 /** 回答を処理し、次の質問へ進む */
@@ -507,7 +507,6 @@ function showStartScreen() {
 
     // 初期状態として音量アイコンをONに設定
     if (DOM.volumeIcon) {
-        // ★修正8: img/ プレフィックスを動的に付与 (既存のロジックは維持)
         DOM.volumeIcon.src = STATE.isMuted 
             ? `img/${CONSTANTS.IMAGE.VOLUME_OFF}` 
             : `img/${CONSTANTS.IMAGE.VOLUME_ON}`;
@@ -564,13 +563,20 @@ function showIntroScene() {
 function showQuestion() {
     STATE.currentScene = CONSTANTS.SCENE.QUESTION; 
     stopAllVoices();
-    updateProgressBar(); 
+    
     if (DOM.startBtn) DOM.startBtn.style.display = "none"; 
 
     if (STATE.questionIndex >= questions.length) {
+        // ★修正: 最終質問の回答後にプログレスバーを100%にする
+        if (DOM.progressContainer && DOM.progressBarFill && DOM.progressText) {
+             DOM.progressBarFill.style.width = `100%`;
+             DOM.progressText.textContent = `質問 ${questions.length} / ${questions.length} 問目`;
+        }
         showLoading(); // 全ての質問に答えたらローディングへ
         return;
     }
+
+    updateProgressBar(); // 質問表示の前にプログレスバーを更新
 
     const q = questions[STATE.questionIndex];
     initializeQASlider(); 
@@ -595,10 +601,11 @@ function showQuestion() {
 function showLoading() {
     STATE.currentScene = CONSTANTS.SCENE.LOADING;
     stopAllVoices(); 
-    updateProgressBar(); 
+    // updateProgressBar(); // ローディング中は非表示にするため不要
 
     if (DOM.choicesEl) DOM.choicesEl.innerHTML = "";
     if (DOM.textEl) DOM.textEl.textContent = ""; 
+    if (DOM.progressContainer) DOM.progressContainer.style.display = 'none'; // プログレスバーを非表示に
 
     if (DOM.loadingOverlay) {
         DOM.loadingOverlay.classList.remove('hidden');
@@ -611,7 +618,6 @@ function showLoading() {
         DOM.gameContainer.classList.remove('normal-result');
     }
 
-
     setTimeout(showResult, CONSTANTS.LOADING_DURATION);
 }
 
@@ -621,16 +627,22 @@ function showResult() {
     stopAllVoices();
     playBGM(CONSTANTS.AUDIO.RESULT_BGM); 
 
-    // ★新しい高度な診断ロジックの適用★
-    const { tagScores, maxTags } = accumulateTags();
-    const recommendedWork = calculateBestMatch(tagScores, maxTags);
-    
-    console.log("--- 診断最終集計 ---");
-    console.log("ユーザーの合計タグスコア:", tagScores);
-    console.log("最重要タグ:", maxTags.map(t => `${t.name} (${t.score}点)`).join(", "));
-    console.log("---------------------");
-    console.log("★最終結果★:", recommendedWork ? recommendedWork.title : "見つかりませんでした");
+    // ★修正: 古いロジック (accumulateTags, calculateBestMatch) を削除し、
+    // 新しいIDF/正規化ロジックを呼び出すように変更
 
+    // 1. 回答のタグを集計
+    const userTags = aggregateUserTags(STATE.answers);
+    
+    // 2. IDF/正規化ロジックで作品を推薦
+    const { scoredWorks, tagIDF } = recommendWorks(userTags);
+    const recommendedWork = scoredWorks.length > 0 ? scoredWorks[0] : null; // スコア最高の作品
+
+    console.log("--- 診断最終集計 (IDFロジック) ---");
+    console.log("ユーザーの合計タグスコア:", userTags);
+    console.log("タグ希少性ボーナス (IDF):", tagIDF);
+    console.log("推薦作品トップ3:", scoredWorks.slice(0, 3).map(w => `${w.title} (Score: ${w.normalizedScore.toFixed(4)})`).join(" | "));
+    console.log("----------------------------------");
+    
     renderResult(recommendedWork);
 }
 
@@ -642,7 +654,7 @@ function renderResult(recommendedWork) {
     if (DOM.loadingOverlay) {
         DOM.loadingOverlay.classList.add('hidden');
     }
-    updateProgressBar();
+    // updateProgressBar(); // 結果画面では非表示
     if (DOM.volumeToggleBtn) DOM.volumeToggleBtn.classList.remove("hidden"); 
 
     const resultTitle = "【診断結果】";
@@ -663,7 +675,7 @@ function renderResult(recommendedWork) {
             sliderWrapper.style.height = '400px'; 
             sliderWrapper.style.overflow = 'hidden'; 
             // 念のためスライダー自体も視覚的にリセット
-            DOM.slider.style.opacity = '1'; 
+            sliderWrapper.style.opacity = '1'; 
         }
         // --- 画像表示強制修正 終点 ---
 
@@ -673,7 +685,8 @@ function renderResult(recommendedWork) {
             `**『${recommendedWork.title}』**\n` +
             `${recommendedWork.artist ? `（${recommendedWork.artist}作）` : ''}\n\n` +
             `【作品紹介】\n` +
-            `${recommendedWork.description}`;
+            `${recommendedWork.description}\n\n` 
+            
     } else {
         // 結果が見つからない（異常診断）の場合はクラスを削除
         if (DOM.gameContainer) {
@@ -710,7 +723,7 @@ function renderResult(recommendedWork) {
 
 
 //======================================
-// 🛠️ 補助関数
+// 🛠️ 補助関数 (UI)
 //======================================
 
 /** 選択肢ボタンを作成するヘルパー関数 */
