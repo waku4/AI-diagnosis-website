@@ -392,11 +392,15 @@ function showQuestion() {
 
     const q = error_questions[questionIndex];
     
-    const voiceSrc = `${currentPersona.audio.question_voice}`;
+    // ★★★ 修正箇所 ★★★
+    // 優先順位: 質問固有の音声(q.voice) > ペルソナの標準音声(question_voice)
+    // q.voice が存在すればそれを使用し、なければペルソナの標準音声を使用
+    const voiceSrc = q.voice || currentPersona.audio.question_voice;
 
-    if (q.voice || voiceSrc) {
+    if (voiceSrc) {
        playVoiceWithMouth(voiceSrc);
     }
+    // ★★★ 修正ここまで ★★★
 
     if (!DOM.choicesEl) return;
     DOM.choicesEl.innerHTML = ""; 
@@ -437,7 +441,7 @@ function showResult() {
             animateText(finalTitle, () => {
                 if (DOM.choicesEl) DOM.choicesEl.innerHTML = "";
                 
-                // 【修正箇所】結果表示後、エンディングセリフをスキップして直接暗転処理を呼び出す
+                // 結果表示後、エンディングセリフをスキップして直接暗転処理を呼び出す
                 // 待機時間（作品紹介を読ませる時間）を設けてから暗転
                 setTimeout(showResetScreen, 3000); 
             });
@@ -475,10 +479,10 @@ function showResetScreen() {
             DOM.centerContainerEl.style.pointerEvents = 'auto'; 
         }
          
-        // 【修正点】メッセージを表示
+        // メッセージを表示
         if (DOM.endMessageEl) {
              DOM.endMessageEl.innerHTML = 
-                `<p></p>`;
+                `<p>解析完了。記憶をリセットします。</p>`;
         }
         
         // 選択肢（ボタン）を表示
@@ -525,7 +529,7 @@ window.onload = () => {
 
   if (DOM.volumeBtn) {
     DOM.volumeBtn.onclick = toggleMute;
-    // 初期状態 (isMuted: false) に対応するアイコンを確実に設定
+    // 【変更点 4】初期状態 (isMuted: true) に対応するアイコンを確実に設定
     if (DOM.volumeIcon) {
         DOM.volumeIcon.src = 'img/volume_off.png';
         DOM.volumeIcon.alt = '音量オフアイコン';
